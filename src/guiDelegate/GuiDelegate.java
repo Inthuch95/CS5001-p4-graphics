@@ -8,6 +8,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Stack;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -21,6 +22,7 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import model.MandelbrotCalculator;
+import model.MandelbrotModel;
 
 
 /**
@@ -38,22 +40,8 @@ import model.MandelbrotCalculator;
  */
 
 public class GuiDelegate implements Observer {
-	// Initial parameter values
-    protected static final double INITIAL_MIN_REAL = -2.0;
-    protected static final double INITIAL_MAX_REAL = 0.7;
-    protected static final double INITIAL_MIN_IMAGINARY = -1.25;
-    protected static final double INITIAL_MAX_IMAGINARY = 1.25;
-    protected static final int INITIAL_MAX_ITERATIONS = 50;
-
-    // Default parameter values
-    protected static final double DEFAULT_RADIUS_SQUARED = 4.0;
-	
-	private static final int FRAME_HEIGHT = 800 + 90;
-	private static final int FRAME_WIDTH = 800;
 	private static final int TEXT_WIDTH = 10;
-	
 	private JFrame mainFrame;
-	
 	private JToolBar toolbar;
 	private JTextField inputField;
 	private JButton changeColor;
@@ -65,25 +53,31 @@ public class GuiDelegate implements Observer {
 	private JLabel maxIter;
 	private JLabel currentIter;
 	private JMenuBar menu;
-	
-	private MandelbrotCalculator model = new MandelbrotCalculator();
-	private int[][] madelbrotData = model.calcMandelbrotSet(800, 800, INITIAL_MIN_REAL, INITIAL_MAX_REAL
-			, INITIAL_MIN_IMAGINARY, INITIAL_MAX_IMAGINARY, INITIAL_MAX_ITERATIONS, DEFAULT_RADIUS_SQUARED);
+	private MandelbrotModel model = new MandelbrotModel();
 	private Setting setting;
+	private Stack<Setting> undoSt = new Stack<Setting>();
+	private Stack<Setting> redoSt = new Stack<Setting>();
 
 	/**
 	 * Instantiate a new SimpleGuiDelegate object
 	 * @param model the Model to observe, render, and update according to user events
 	 */
-	public GuiDelegate(MandelbrotCalculator model){
+	public GuiDelegate(MandelbrotModel model){
 		this.model = model;
 		this.mainFrame = new JFrame();  // set up the main frame for this GUI
-		this.setting = new Setting(FRAME_HEIGHT, FRAME_WIDTH, INITIAL_MIN_REAL, INITIAL_MAX_REAL
-				, INITIAL_MIN_IMAGINARY, INITIAL_MAX_IMAGINARY, INITIAL_MAX_ITERATIONS, DEFAULT_RADIUS_SQUARED);
+		setting = new Setting(model.getXResolution(),
+				model.getYResolution(),
+				model.getMinReal(),
+				model.getMaxReal(),
+				model.getMinImaginary(),
+				model.getMaxImaginary(),
+				model.getMaxIterations(),
+				model.getRadiusSquared()
+				);
 		menu = new JMenuBar();
 		toolbar = new JToolBar();
 		inputField = new JTextField(TEXT_WIDTH);
-		panel = new Panel(madelbrotData, setting);
+		panel = new Panel(model);
 		setupComponents();
 		
 		// add the delegate UI component as an observer of the model
@@ -109,15 +103,25 @@ public class GuiDelegate implements Observer {
 		reset = new JButton("Reset");
 		reset.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				// should  call method in model class if you want it to affect model
-				JOptionPane.showMessageDialog(mainFrame, "Ooops, Reset not linked to model!");
+				saveSetting();
+				setting.resetSetting();
+				model.resetModel();
 			}
 		});
 		undo = new JButton("Undo");
 		undo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				// should  call method in model class if you want it to affect model
-				JOptionPane.showMessageDialog(mainFrame, "Ooops, Undo not linked to model!");
+				if (!undoSt.isEmpty()) {
+					restoreSetting();
+					model.updateModel(setting.xResolution, 
+							setting.yResolution, 
+							setting.minReal, 
+							setting.maxReal, 
+							setting.minImaginary, 
+							setting.maxImaginary, 
+							setting.maxIterations, 
+							setting.radiusSquared);
+				}
 			}
 		});
 		redo = new JButton("Redo");
@@ -131,19 +135,35 @@ public class GuiDelegate implements Observer {
 		changeIter = new JButton("Change");
 		changeIter.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				// should  call method in model class if you want it to affect model
-				JOptionPane.showMessageDialog(mainFrame, "Ooops, Change not linked to model!");
+				saveSetting();
+				setting.maxIterations = Integer.parseInt(inputField.getText());
+				model.updateModel(setting.xResolution, 
+						setting.yResolution, 
+						setting.minReal, 
+						setting.maxReal, 
+						setting.minImaginary, 
+						setting.maxImaginary, 
+						setting.maxIterations, 
+						setting.radiusSquared);
 			}
 		});
 
 		maxIter = new JLabel("Max iteration: ");
-		currentIter = new JLabel("Current iteration: ");
+		currentIter = new JLabel("Current iteration: " + model.getMaxIterations());
 		
 		inputField.addKeyListener(new KeyListener(){        // to translate key event for the text filed into appropriate model method call
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER){
-//					model.addText(inputField.getText());    // tell model to add text entered by user
-					inputField.setText("");                 // clear the input box in the GUI view
+					saveSetting();
+					setting.maxIterations = Integer.parseInt(inputField.getText());
+					model.updateModel(setting.xResolution, 
+							setting.yResolution, 
+							setting.minReal, 
+							setting.maxReal, 
+							setting.minImaginary, 
+							setting.maxImaginary, 
+							setting.maxIterations, 
+							setting.radiusSquared);
 				}
 			}
 			public void keyReleased(KeyEvent e) {
@@ -203,27 +223,35 @@ public class GuiDelegate implements Observer {
 		setupToolbar();
 		panel.setBackground(new Color(255, 255, 255));
 		mainFrame.add(panel, BorderLayout.CENTER);
-		mainFrame.setSize (FRAME_WIDTH, FRAME_HEIGHT);
+		mainFrame.setSize (setting.xResolution, setting.yResolution + 90);
 		mainFrame.setVisible(true);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}	
 	
-	/**
-	 * This method contains code to update the GUI view when the model changes
-	 * The method is called when the model changes (i.e. when the model executes setChanged() and notifyObservers())
-	 * Any parameters passed to notifyObservers @see java.util.Observer#update(java.util.Observable, java.lang.Object)
-	 * are passed to update. 
-	 * The code in update should get hold of the model state it requires and update the relevant GUI components so that
-	 * an updated view of the model is displayed on screen.
-	 * For this simple example, the only state information we need from the model is what is in the model's text buffer and the
-	 * only GUI view element we need to update is the text area used for output.
-	 * 
-	 * NOTE: In a more complex program, the model may hold information on a variety of objects, such as various shapes, their positions, etc.
-	 * and the GUI view would then have to get hold of all that state info and produce a graphical representation of theses objects.
-	 * As a result, the update method would have to get hold of various bits of model state and then
-	 * call the relevant methods (defined in the GUI code) to render the objects.
-	 * 
-	 */
+	private void saveSetting() {
+		Setting oldSetting = new Setting(setting.xResolution, 
+				setting.yResolution, 
+				setting.minReal, 
+				setting.maxReal, 
+				setting.minImaginary, 
+				setting.maxImaginary, 
+				setting.maxIterations, 
+				setting.radiusSquared);
+		undoSt.push(oldSetting);
+	}
+	
+	private void restoreSetting() {
+		Setting oldSetting = undoSt.pop();
+		setting.updateSetting(oldSetting.xResolution, 
+				oldSetting.yResolution, 
+				oldSetting.minReal, 
+				oldSetting.maxReal, 
+				oldSetting.minImaginary, 
+				oldSetting.maxImaginary, 
+				oldSetting.maxIterations, 
+				oldSetting.radiusSquared);
+	}
+	
 	public void update(Observable o, Object arg) {
 
 		// Tell the SwingUtilities thread to update the GUI components.
@@ -231,7 +259,9 @@ public class GuiDelegate implements Observer {
 		// in the caller's thread 
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
-//				outputField.setText(model.getText());
+				currentIter.setText("Current iteration: " + setting.maxIterations);
+				inputField.setText("");
+				panel.repaint();
 			}
 		});
 	}

@@ -1,7 +1,5 @@
 package model;
 
-import java.util.Observable;
-
 /**
  * The MandelbrotCalculator class contains methods which establish the Mandelbrot set.
  * The calcMandelbrotSet method below iterates over X,Y positions and establishes for specified parameter values a 2-D array containing
@@ -16,7 +14,7 @@ import java.util.Observable;
  * @author jonl
  *
  */
-public class MandelbrotCalculator extends Observable  {
+public class MandelbrotCalculator {
 
     // Initial parameter values
     protected static final double INITIAL_MIN_REAL = -2.0;
@@ -24,10 +22,8 @@ public class MandelbrotCalculator extends Observable  {
     protected static final double INITIAL_MIN_IMAGINARY = -1.25;
     protected static final double INITIAL_MAX_IMAGINARY = 1.25;
     protected static final int INITIAL_MAX_ITERATIONS = 50;
-
     // Default parameter values
     protected static final double DEFAULT_RADIUS_SQUARED = 4.0;
-
 
 
     /**
