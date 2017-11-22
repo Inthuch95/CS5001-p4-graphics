@@ -6,12 +6,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.Deque;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Stack;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -151,13 +156,21 @@ public class GuiDelegate implements Observer {
 
 		// add buttons, label, and textfield to the toolbar
 		toolbar.add(changeColor);
+		toolbar.addSeparator();
 		toolbar.add(reset);
+		toolbar.addSeparator();
 		toolbar.add(undo);
+		toolbar.addSeparator();
 		toolbar.add(redo);
+		toolbar.addSeparator();
 		toolbar.add(currentIter);
+		toolbar.addSeparator();
 		toolbar.add(maxIter);
+		toolbar.addSeparator();
 		toolbar.add(inputField);
+		toolbar.addSeparator();
 		toolbar.add(changeIter);
+		toolbar.addSeparator();
 		// add toolbar to north of main frame
 		mainFrame.add(toolbar, BorderLayout.NORTH);
 	}
@@ -178,14 +191,47 @@ public class GuiDelegate implements Observer {
 		menu.add (file);
 		load.addActionListener(new ActionListener(){ 
 			public void actionPerformed(ActionEvent e) {
-				// should call appropriate method in model class if you want it to do something useful
-				JOptionPane.showMessageDialog(mainFrame, "Ooops, Load not linked to model!");
+				JFileChooser fc = new JFileChooser();
+				File workingDirectory = new File(System.getProperty("user.dir"));
+				fc.setCurrentDirectory(workingDirectory);
+				int returnVal = fc.showOpenDialog(fc);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					File file = fc.getSelectedFile();
+					try {
+						saveSetting();
+						redoSt.clear();
+						FileInputStream fi = new FileInputStream(file);
+						ObjectInputStream oi = new ObjectInputStream(fi);
+						Setting loadedSetting = (Setting) oi.readObject();
+						setting.updateSetting(loadedSetting);
+						oi.close();
+						fi.close();
+						model.updateModel();
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+				}
 			}
 		});
 		save.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				// should call appropriate method in model class if you want it to do something useful
-				JOptionPane.showMessageDialog(mainFrame, "Ooops, Save not linked to model!");
+				JFileChooser fc = new JFileChooser();
+				File workingDirectory = new File(System.getProperty("user.dir"));
+				fc.setCurrentDirectory(workingDirectory);
+				int returnVal = fc.showSaveDialog(fc);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					File file = fc.getSelectedFile();
+					try {
+						System.out.println ("File is " + file.toString());
+						FileOutputStream f = new FileOutputStream(file);
+						ObjectOutputStream o = new ObjectOutputStream(f);
+						o.writeObject(setting);
+						o.close();
+						f.close();
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+				}
 			}
 		});		
 		// add menubar to frame

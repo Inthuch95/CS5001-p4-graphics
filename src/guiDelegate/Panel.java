@@ -26,7 +26,6 @@ public class Panel extends JPanel {
         	for (int j = 0; j < madelbrotData[i].length; j++) {
         		if (madelbrotData[i][j] >= maxIterations) {
         			g.setColor(Color.BLACK);
-                	g.drawLine(j, i, j, i);
                 } else {
                 	Deque<String> colors = model.getSetting().getColors();
                 	String currentColor = colors.peek();
@@ -40,8 +39,8 @@ public class Panel extends JPanel {
                 	} else {
                 		g.setColor(Color.WHITE);
                 	}
-                	g.drawLine(j, i, j, i);
                 }
+        		g.drawLine(j, i, j, i);
             }
         }
     }

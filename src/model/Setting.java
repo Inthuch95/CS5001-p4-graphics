@@ -1,9 +1,10 @@
 package model;
 
+import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class Setting {
+public class Setting implements Serializable {
 	private final int INITIAL_X_RESOLUTION = 800;
 	private final int INITIAL_Y_RESOLUTION = 800;
 	private double minReal;
