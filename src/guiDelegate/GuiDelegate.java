@@ -21,7 +21,6 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
-import model.MandelbrotCalculator;
 import model.MandelbrotModel;
 
 
@@ -65,15 +64,7 @@ public class GuiDelegate implements Observer {
 	public GuiDelegate(MandelbrotModel model){
 		this.model = model;
 		this.mainFrame = new JFrame();  // set up the main frame for this GUI
-		setting = new Setting(model.getXResolution(),
-				model.getYResolution(),
-				model.getMinReal(),
-				model.getMaxReal(),
-				model.getMinImaginary(),
-				model.getMaxImaginary(),
-				model.getMaxIterations(),
-				model.getRadiusSquared()
-				);
+		setting = new Setting(model);
 		menu = new JMenuBar();
 		toolbar = new JToolBar();
 		inputField = new JTextField(TEXT_WIDTH);
@@ -113,14 +104,7 @@ public class GuiDelegate implements Observer {
 			public void actionPerformed(ActionEvent e){
 				if (!undoSt.isEmpty()) {
 					restoreSetting();
-					model.updateModel(setting.xResolution, 
-							setting.yResolution, 
-							setting.minReal, 
-							setting.maxReal, 
-							setting.minImaginary, 
-							setting.maxImaginary, 
-							setting.maxIterations, 
-							setting.radiusSquared);
+					model.updateModel(setting);
 				}
 			}
 		});
@@ -136,15 +120,8 @@ public class GuiDelegate implements Observer {
 		changeIter.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				saveSetting();
-				setting.maxIterations = Integer.parseInt(inputField.getText());
-				model.updateModel(setting.xResolution, 
-						setting.yResolution, 
-						setting.minReal, 
-						setting.maxReal, 
-						setting.minImaginary, 
-						setting.maxImaginary, 
-						setting.maxIterations, 
-						setting.radiusSquared);
+				setting.setMaxIterations(Integer.parseInt(inputField.getText()));
+				model.updateModel(setting);
 			}
 		});
 
@@ -155,15 +132,8 @@ public class GuiDelegate implements Observer {
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER){
 					saveSetting();
-					setting.maxIterations = Integer.parseInt(inputField.getText());
-					model.updateModel(setting.xResolution, 
-							setting.yResolution, 
-							setting.minReal, 
-							setting.maxReal, 
-							setting.minImaginary, 
-							setting.maxImaginary, 
-							setting.maxIterations, 
-							setting.radiusSquared);
+					setting.setMaxIterations(Integer.parseInt(inputField.getText()));
+					model.updateModel(setting);
 				}
 			}
 			public void keyReleased(KeyEvent e) {
@@ -221,35 +191,21 @@ public class GuiDelegate implements Observer {
 	private void setupComponents(){
 		setupMenu();
 		setupToolbar();
-		panel.setBackground(new Color(255, 255, 255));
+		panel.setBackground(Color.WHITE);
 		mainFrame.add(panel, BorderLayout.CENTER);
-		mainFrame.setSize (setting.xResolution, setting.yResolution + 90);
+		mainFrame.setSize (setting.getXResolution(), setting.getYResolution() + 90);
 		mainFrame.setVisible(true);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}	
 	
 	private void saveSetting() {
-		Setting oldSetting = new Setting(setting.xResolution, 
-				setting.yResolution, 
-				setting.minReal, 
-				setting.maxReal, 
-				setting.minImaginary, 
-				setting.maxImaginary, 
-				setting.maxIterations, 
-				setting.radiusSquared);
+		Setting oldSetting = new Setting(model);
 		undoSt.push(oldSetting);
 	}
 	
 	private void restoreSetting() {
 		Setting oldSetting = undoSt.pop();
-		setting.updateSetting(oldSetting.xResolution, 
-				oldSetting.yResolution, 
-				oldSetting.minReal, 
-				oldSetting.maxReal, 
-				oldSetting.minImaginary, 
-				oldSetting.maxImaginary, 
-				oldSetting.maxIterations, 
-				oldSetting.radiusSquared);
+		setting.updateSetting(oldSetting);
 	}
 	
 	public void update(Observable o, Object arg) {
@@ -259,7 +215,7 @@ public class GuiDelegate implements Observer {
 		// in the caller's thread 
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
-				currentIter.setText("Current iteration: " + setting.maxIterations);
+				currentIter.setText("Current iteration: " + setting.getMaxIterations());
 				inputField.setText("");
 				panel.repaint();
 			}

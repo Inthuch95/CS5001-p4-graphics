@@ -2,6 +2,8 @@ package model;
 
 import java.util.Observable;
 
+import guiDelegate.Setting;
+
 public class MandelbrotModel extends Observable {
 	private int[][] madelbrotData;
 	private MandelbrotCalculator mandelCalc;
@@ -28,16 +30,15 @@ public class MandelbrotModel extends Observable {
 				MandelbrotCalculator.DEFAULT_RADIUS_SQUARED);
 	}
 	
-	public void updateModel(int xResolution, int yResolution, double minReal, double maxReal
-			, double minImaginary, double maxImaginary, int maxIterations, double radiusSquared) {
-		this.xResolution = xResolution;
-		this.yResolution = yResolution;
-		this.minReal = minReal;
-		this.maxReal = maxReal;
-		this.minImaginary = minImaginary;
-		this.maxImaginary = maxImaginary;
-		this.maxIterations = maxIterations;
-		this.radiusSquared = radiusSquared;
+	public void updateModel(Setting setting) {
+		this.yResolution = setting.getXResolution();
+		this.xResolution = setting.getXResolution();
+		this.minReal = setting.getMinReal();
+		this.maxReal = setting.getMaxReal();
+		this.minImaginary = setting.getMinImaginary();
+		this.maxImaginary = setting.getMaxImaginary();
+		this.maxIterations = setting.getMaxIterations();
+		this.radiusSquared = setting.getRadiusSquared();
 		this.madelbrotData = mandelCalc.calcMandelbrotSet(xResolution, 
 				yResolution,
 				minReal,
@@ -105,5 +106,41 @@ public class MandelbrotModel extends Observable {
 	
 	public double getRadiusSquared() {
 		return this.radiusSquared;
+	}
+
+	public void setMadelbrotData(int[][] madelbrotData) {
+		this.madelbrotData = madelbrotData;
+	}
+
+	public void setxResolution(int xResolution) {
+		this.xResolution = xResolution;
+	}
+
+	public void setyResolution(int yResolution) {
+		this.yResolution = yResolution;
+	}
+
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
+	}
+
+	public void setMinReal(double minReal) {
+		this.minReal = minReal;
+	}
+
+	public void setMaxReal(double maxReal) {
+		this.maxReal = maxReal;
+	}
+
+	public void setMinImaginary(double minImaginary) {
+		this.minImaginary = minImaginary;
+	}
+
+	public void setMaxImaginary(double maxImaginary) {
+		this.maxImaginary = maxImaginary;
+	}
+
+	public void setRadiusSquared(double radiusSquared) {
+		this.radiusSquared = radiusSquared;
 	}
 }
