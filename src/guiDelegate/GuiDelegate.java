@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Deque;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Stack;
@@ -22,6 +23,7 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import model.MandelbrotModel;
+import model.Setting;
 
 
 /**
@@ -39,7 +41,7 @@ import model.MandelbrotModel;
  */
 
 public class GuiDelegate implements Observer {
-	private static final int TEXT_WIDTH = 10;
+	private final int TEXT_WIDTH = 10;
 	private JFrame mainFrame;
 	private JToolBar toolbar;
 	private JTextField inputField;
@@ -53,7 +55,7 @@ public class GuiDelegate implements Observer {
 	private JLabel currentIter;
 	private JMenuBar menu;
 	private MandelbrotModel model = new MandelbrotModel();
-	private Setting setting;
+	Setting setting;
 	private Stack<Setting> undoSt = new Stack<Setting>();
 	private Stack<Setting> redoSt = new Stack<Setting>();
 
@@ -63,11 +65,11 @@ public class GuiDelegate implements Observer {
 	 */
 	public GuiDelegate(MandelbrotModel model){
 		this.model = model;
-		this.mainFrame = new JFrame();  // set up the main frame for this GUI
-		setting = new Setting(model);
+		mainFrame = new JFrame();  // set up the main frame for this GUI
 		menu = new JMenuBar();
 		toolbar = new JToolBar();
 		inputField = new JTextField(TEXT_WIDTH);
+		setting = model.getSetting();
 		panel = new Panel(model);
 		setupComponents();
 		
@@ -87,53 +89,58 @@ public class GuiDelegate implements Observer {
 		changeColor = new JButton("Change color");
 		changeColor.addActionListener(new ActionListener(){     // to translate event for this button into appropriate model method call
 			public void actionPerformed(ActionEvent e){
-				// should  call method in model class if you want it to affect model
-				JOptionPane.showMessageDialog(mainFrame, "Ooops, Change color not linked to model!");
+				saveSetting();
+				redoSt.clear();
+				model.changeColor();
 			}
 		});
 		reset = new JButton("Reset");
 		reset.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				saveSetting();
-				setting.resetSetting();
+				redoSt.clear();
 				model.resetModel();
 			}
 		});
 		undo = new JButton("Undo");
 		undo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				if (!undoSt.isEmpty()) {
-					restoreSetting();
-					model.updateModel(setting);
-				}
+				saveRedoSetting();
+				redo.setEnabled(true);
+				restoreSetting();
+				model.updateModel();
 			}
 		});
+		undo.setEnabled(false);
 		redo = new JButton("Redo");
 		redo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				// should  call method in model class if you want it to affect model
-				JOptionPane.showMessageDialog(mainFrame, "Ooops, Redo not linked to model!");
+				saveSetting();
+				restoreRedoSetting();
+				model.updateModel();
 			}
 		});
-		
+		redo.setEnabled(false);
 		changeIter = new JButton("Change");
 		changeIter.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				saveSetting();
 				setting.setMaxIterations(Integer.parseInt(inputField.getText()));
-				model.updateModel(setting);
+				redoSt.clear();
+				model.updateModel();
 			}
 		});
 
 		maxIter = new JLabel("Max iteration: ");
-		currentIter = new JLabel("Current iteration: " + model.getMaxIterations());
-		
-		inputField.addKeyListener(new KeyListener(){        // to translate key event for the text filed into appropriate model method call
+		currentIter = new JLabel("Current iteration: " + model.getSetting().getMaxIterations());
+		// to translate key event for the text filed into appropriate model method call
+		inputField.addKeyListener(new KeyListener(){        
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER){
 					saveSetting();
 					setting.setMaxIterations(Integer.parseInt(inputField.getText()));
-					model.updateModel(setting);
+					redoSt.clear();
+					model.updateModel();
 				}
 			}
 			public void keyReleased(KeyEvent e) {
@@ -199,8 +206,15 @@ public class GuiDelegate implements Observer {
 	}	
 	
 	private void saveSetting() {
-		Setting oldSetting = new Setting(model);
+		Setting oldSetting = new Setting();
+		oldSetting.updateSetting(setting);
 		undoSt.push(oldSetting);
+	}
+	
+	private void saveRedoSetting() {
+		Setting oldSetting = new Setting();
+		oldSetting.updateSetting(setting);
+		redoSt.push(oldSetting);
 	}
 	
 	private void restoreSetting() {
@@ -208,13 +222,25 @@ public class GuiDelegate implements Observer {
 		setting.updateSetting(oldSetting);
 	}
 	
+	private void restoreRedoSetting() {
+		Setting newSetting = redoSt.pop();
+		setting.updateSetting(newSetting);
+	}
+	
 	public void update(Observable o, Object arg) {
-
 		// Tell the SwingUtilities thread to update the GUI components.
-		// This is safer than executing outputField.setText(model.getText()) 
-		// in the caller's thread 
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
+				if (!undoSt.isEmpty()) {
+					undo.setEnabled(true);
+				} else {
+					undo.setEnabled(false);
+				}
+				if (!redoSt.isEmpty()) {
+					redo.setEnabled(true);
+				} else {
+					redo.setEnabled(false);
+				}
 				currentIter.setText("Current iteration: " + setting.getMaxIterations());
 				inputField.setText("");
 				panel.repaint();

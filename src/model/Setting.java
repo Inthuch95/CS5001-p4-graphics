@@ -1,17 +1,12 @@
-package guiDelegate;
+package model;
 
-import model.MandelbrotModel;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class Setting {
-	// Initial parameter values
-    private static final double INITIAL_MIN_REAL = -2.0;
-    private static final double INITIAL_MAX_REAL = 0.7;
-    private static final double INITIAL_MIN_IMAGINARY = -1.25;
-    private static final double INITIAL_MAX_IMAGINARY = 1.25;
-    private static final int INITIAL_MAX_ITERATIONS = 50;
-    // Default parameter values
-    private static final double DEFAULT_RADIUS_SQUARED = 4.0;
-    private double minReal;
+	private final int INITIAL_X_RESOLUTION = 800;
+	private final int INITIAL_Y_RESOLUTION = 800;
+	private double minReal;
     private double maxReal;
     private double minImaginary;
     private double maxImaginary;
@@ -19,16 +14,18 @@ public class Setting {
     private double radiusSquared;
     private int yResolution;
     private int xResolution;
+    Deque<String> colors = new ArrayDeque<String>();
 	
-	public Setting(MandelbrotModel model) {
-		this.yResolution = model.getXResolution();
-		this.xResolution = model.getXResolution();
-		this.minReal = model.getMinReal();
-		this.maxReal = model.getMaxReal();
-		this.minImaginary = model.getMinImaginary();
-		this.maxImaginary = model.getMaxImaginary();
-		this.maxIterations = model.getMaxIterations();
-		this.radiusSquared = model.getRadiusSquared();
+	public Setting() {
+		this.xResolution = INITIAL_X_RESOLUTION;
+		this.yResolution = INITIAL_Y_RESOLUTION;
+		this.minReal = MandelbrotCalculator.INITIAL_MIN_REAL;
+		this.maxReal = MandelbrotCalculator.INITIAL_MAX_REAL;
+		this.minImaginary = MandelbrotCalculator.INITIAL_MIN_IMAGINARY;
+		this.maxImaginary = MandelbrotCalculator.INITIAL_MAX_IMAGINARY;
+		this.maxIterations = MandelbrotCalculator.INITIAL_MAX_ITERATIONS;
+		this.radiusSquared = MandelbrotCalculator.DEFAULT_RADIUS_SQUARED;
+		initializeColors();
 	}
 	
 	public void updateSetting(Setting setting) {
@@ -40,17 +37,33 @@ public class Setting {
 		this.maxImaginary = setting.getMaxImaginary();
 		this.maxIterations = setting.getMaxIterations();
 		this.radiusSquared = setting.getRadiusSquared();
+		this.colors.clear();
+		this.colors.addAll(setting.getColors());
 	}
 	
 	public void resetSetting() {
-		this.xResolution = 800;
-		this.yResolution = 800;
-		this.minReal = INITIAL_MIN_REAL;
-		this.maxReal = INITIAL_MAX_REAL;
-		this.minImaginary = INITIAL_MIN_IMAGINARY;
-		this.maxImaginary = INITIAL_MAX_IMAGINARY;
-		this.maxIterations = INITIAL_MAX_ITERATIONS;
-		this.radiusSquared = DEFAULT_RADIUS_SQUARED;
+		this.xResolution = INITIAL_X_RESOLUTION;
+		this.yResolution = INITIAL_Y_RESOLUTION;
+		this.minReal = MandelbrotCalculator.INITIAL_MIN_REAL;
+		this.maxReal = MandelbrotCalculator.INITIAL_MAX_REAL;
+		this.minImaginary = MandelbrotCalculator.INITIAL_MIN_IMAGINARY;
+		this.maxImaginary = MandelbrotCalculator.INITIAL_MAX_IMAGINARY;
+		this.maxIterations = MandelbrotCalculator.INITIAL_MAX_ITERATIONS;
+		this.radiusSquared = MandelbrotCalculator.DEFAULT_RADIUS_SQUARED;
+		this.colors.clear();
+		initializeColors();
+	}
+	
+	private void initializeColors() {
+		colors.add("default");
+		colors.add("red");
+		colors.add("green");
+		colors.add("blue");
+	}
+	
+	public void changeColor() {
+		String currentColor = colors.poll();
+		colors.add(currentColor);
 	}
 	
 	public int getXResolution() {
@@ -107,6 +120,14 @@ public class Setting {
 
 	public void setRadiusSquared(double radiusSquared) {
 		this.radiusSquared = radiusSquared;
+	}
+
+	public Deque<String> getColors() {
+		return colors;
+	}
+
+	public void setColors(Deque<String> colors) {
+		this.colors = colors;
 	}
 
 	public void setyResolution(int yResolution) {
