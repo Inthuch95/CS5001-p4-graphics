@@ -1,11 +1,14 @@
 package model;
 
 import java.util.Observable;
+import java.util.Stack;
 
 public class MandelbrotModel extends Observable {
 	private int[][] madelbrotData;
 	private MandelbrotCalculator mandelCalc;
 	private Setting setting; 
+	private Stack<Setting> undoSt = new Stack<Setting>();
+	private Stack<Setting> redoSt = new Stack<Setting>();
 	
 	public MandelbrotModel() {
 		this.mandelCalc = new MandelbrotCalculator();
@@ -47,6 +50,32 @@ public class MandelbrotModel extends Observable {
 		notifyObservers();
 	}
 	
+	public void clearRedoStack() {
+		redoSt.clear();
+	}
+	
+	public void saveUndoSetting() {
+		Setting oldSetting = new Setting();
+		oldSetting.updateSetting(setting);
+		undoSt.push(oldSetting);
+	}
+	
+	public void saveRedoSetting() {
+		Setting oldSetting = new Setting();
+		oldSetting.updateSetting(setting);
+		redoSt.push(oldSetting);
+	}
+	
+	public void restoreUndoSetting() {
+		Setting oldSetting = undoSt.pop();
+		setting.updateSetting(oldSetting);
+	}
+	
+	public void restoreRedoSetting() {
+		Setting newSetting = redoSt.pop();
+		setting.updateSetting(newSetting);
+	}
+	
 	public void changeColor() {
 		setting.changeColor();
 		setChanged();
@@ -63,6 +92,22 @@ public class MandelbrotModel extends Observable {
 
 	public void setSetting(Setting setting) {
 		this.setting = setting;
+	}
+
+	public Stack<Setting> getUndoSt() {
+		return undoSt;
+	}
+
+	public void setUndoSt(Stack<Setting> undoSt) {
+		this.undoSt = undoSt;
+	}
+
+	public Stack<Setting> getRedoSt() {
+		return redoSt;
+	}
+
+	public void setRedoSt(Stack<Setting> redoSt) {
+		this.redoSt = redoSt;
 	}
 
 }

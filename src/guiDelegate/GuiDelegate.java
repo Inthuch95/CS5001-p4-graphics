@@ -13,7 +13,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Stack;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -22,28 +21,12 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import model.MandelbrotModel;
 import model.Setting;
-
-
-/**
- * The SimpleGuiDelegate class whose purpose is to render relevant state information stored in the model and make changes to the model state based on user events. 
- * 
- * This class uses Swing to display the model state when the model changes. This is the view aspect of the delegate class. 
- * It also listens for user input events (in the listeners defined below), translates these to appropriate calls to methods
- * defined in the model class so as to make changes to the model. This is the controller aspect of the delegate class. 
- * The class implements Observer in order to permit it to be added as an observer of the model class. 
- * When the model calls notifyObservers() (after executing setChanged()) 
- * the update(...) method below is called in order to update the view of the model.
- * 
- * @author jonl
- *
- */
 
 public class GuiDelegate implements Observer {
 	private final int TEXT_WIDTH = 10;
@@ -61,8 +44,6 @@ public class GuiDelegate implements Observer {
 	private JMenuBar menu;
 	private MandelbrotModel model = new MandelbrotModel();
 	Setting setting;
-	private Stack<Setting> undoSt = new Stack<Setting>();
-	private Stack<Setting> redoSt = new Stack<Setting>();
 
 	/**
 	 * Instantiate a new SimpleGuiDelegate object
@@ -94,25 +75,25 @@ public class GuiDelegate implements Observer {
 		changeColor = new JButton("Change color");
 		changeColor.addActionListener(new ActionListener(){     // to translate event for this button into appropriate model method call
 			public void actionPerformed(ActionEvent e){
-				saveSetting();
-				redoSt.clear();
+				model.saveUndoSetting();
+				model.clearRedoStack();
 				model.changeColor();
 			}
 		});
 		reset = new JButton("Reset");
 		reset.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				saveSetting();
-				redoSt.clear();
+				model.saveUndoSetting();
+				model.clearRedoStack();
 				model.resetModel();
 			}
 		});
 		undo = new JButton("Undo");
 		undo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				saveRedoSetting();
+				model.saveRedoSetting();
 				redo.setEnabled(true);
-				restoreSetting();
+				model.restoreUndoSetting();
 				model.updateModel();
 			}
 		});
@@ -120,8 +101,8 @@ public class GuiDelegate implements Observer {
 		redo = new JButton("Redo");
 		redo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				saveSetting();
-				restoreRedoSetting();
+				model.saveUndoSetting();
+				model.restoreRedoSetting();
 				model.updateModel();
 			}
 		});
@@ -129,9 +110,9 @@ public class GuiDelegate implements Observer {
 		changeIter = new JButton("Change");
 		changeIter.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				saveSetting();
+				model.saveUndoSetting();
 				setting.setMaxIterations(Integer.parseInt(inputField.getText()));
-				redoSt.clear();
+				model.clearRedoStack();
 				model.updateModel();
 			}
 		});
@@ -142,9 +123,9 @@ public class GuiDelegate implements Observer {
 		inputField.addKeyListener(new KeyListener(){        
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER){
-					saveSetting();
+					model.saveUndoSetting();
 					setting.setMaxIterations(Integer.parseInt(inputField.getText()));
-					redoSt.clear();
+					model.clearRedoStack();
 					model.updateModel();
 				}
 			}
@@ -198,8 +179,8 @@ public class GuiDelegate implements Observer {
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
 					try {
-						saveSetting();
-						redoSt.clear();
+						model.saveUndoSetting();
+						model.clearRedoStack();
 						FileInputStream fi = new FileInputStream(file);
 						ObjectInputStream oi = new ObjectInputStream(fi);
 						Setting loadedSetting = (Setting) oi.readObject();
@@ -251,38 +232,16 @@ public class GuiDelegate implements Observer {
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}	
 	
-	private void saveSetting() {
-		Setting oldSetting = new Setting();
-		oldSetting.updateSetting(setting);
-		undoSt.push(oldSetting);
-	}
-	
-	private void saveRedoSetting() {
-		Setting oldSetting = new Setting();
-		oldSetting.updateSetting(setting);
-		redoSt.push(oldSetting);
-	}
-	
-	private void restoreSetting() {
-		Setting oldSetting = undoSt.pop();
-		setting.updateSetting(oldSetting);
-	}
-	
-	private void restoreRedoSetting() {
-		Setting newSetting = redoSt.pop();
-		setting.updateSetting(newSetting);
-	}
-	
 	public void update(Observable o, Object arg) {
 		// Tell the SwingUtilities thread to update the GUI components.
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
-				if (!undoSt.isEmpty()) {
+				if (!model.getUndoSt().isEmpty()) {
 					undo.setEnabled(true);
 				} else {
 					undo.setEnabled(false);
 				}
-				if (!redoSt.isEmpty()) {
+				if (!model.getRedoSt().isEmpty()) {
 					redo.setEnabled(true);
 				} else {
 					redo.setEnabled(false);

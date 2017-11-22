@@ -22,3 +22,16 @@
 hs_err_pid*
 /bin/
 *.obj
+
+# Pictures
+*.jpg
+*.png
+*.ucls
+*.PNG
+*.gif
+
+# XML
+*.xml
+
+# Text
+*.txt
