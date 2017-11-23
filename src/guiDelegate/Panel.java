@@ -54,26 +54,33 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
         		g.drawLine(j, i, j, i);
             }
         }
+        Deque<String> colors = model.getSetting().getColors();
+        String currentColor = colors.peek();
+        if (currentColor.equals("red")) {
+    		g.setColor(Color.RED);
+    	} else if (currentColor.equals("green")) {
+    		g.setColor(Color.GREEN);
+    	} else if (currentColor.equals("blue")) {
+    		g.setColor(Color.BLUE);
+    	} else {
+    		g.setColor(Color.BLACK);
+    	}
         int width = Math.abs(x2 - x1);
     	int height = Math.abs(y2 - y1);
         // drag southeast
         if (x2 > x1 && y2 > y1) {
-        	g.setColor(Color.BLACK);
         	g.drawRect(x1, y1, width, height);
         }
         // drag northeast
         if (x2 > x1 && y2 < y1) {
-        	g.setColor(Color.BLACK);
         	g.drawRect(x1, y2, width, height);
         }
         // drag southwest
         if (x2 < x1 && y2 > y1) {
-        	g.setColor(Color.BLACK);
         	g.drawRect(x2, y1, width, height);
         }
         // drag northwest
         if (x2 < x1 && y2 < y1) {
-        	g.setColor(Color.BLACK);
         	g.drawRect(x2, y2, width, height);
         }
     }
@@ -85,7 +92,6 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		System.out.println("Mouse clicked " + e.getX() + " " + e.getY());
 		x1 = e.getX();
 		y1 = e.getY();
 	}
