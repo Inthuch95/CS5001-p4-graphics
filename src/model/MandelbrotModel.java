@@ -37,6 +37,8 @@ public class MandelbrotModel extends Observable {
 	}
 	
 	public void resetModel() {
+		undoSt.clear();
+		redoSt.clear();
 		setting.resetSetting();
 		madelbrotData = mandelCalc.calcMandelbrotSet(800, 
 				800, 

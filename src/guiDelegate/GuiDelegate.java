@@ -1,7 +1,6 @@
 package guiDelegate;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -83,8 +82,6 @@ public class GuiDelegate implements Observer {
 		reset = new JButton("Reset");
 		reset.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				model.saveUndoSetting();
-				model.clearRedoStack();
 				model.resetModel();
 			}
 		});
@@ -225,7 +222,6 @@ public class GuiDelegate implements Observer {
 	private void setupComponents(){
 		setupMenu();
 		setupToolbar();
-		panel.setBackground(Color.WHITE);
 		mainFrame.add(panel, BorderLayout.CENTER);
 		mainFrame.setSize (setting.getXResolution(), setting.getYResolution() + 90);
 		mainFrame.setVisible(true);
