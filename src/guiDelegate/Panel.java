@@ -54,31 +54,25 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
         		g.drawLine(j, i, j, i);
             }
         }
+        int width = Math.abs(x2 - x1);
+    	int height = Math.abs(y2 - y1);
         // drag southeast
         if (x2 > x1 && y2 > y1) {
-        	int width = Math.abs(x2 - x1);
-        	int height = Math.abs(y2 - y1);
         	g.setColor(Color.BLACK);
         	g.drawRect(x1, y1, width, height);
         }
         // drag northeast
         if (x2 > x1 && y2 < y1) {
-        	int width = Math.abs(x2 - x1);
-        	int height = Math.abs(y2 - y1);
         	g.setColor(Color.BLACK);
         	g.drawRect(x1, y2, width, height);
         }
         // drag southwest
         if (x2 < x1 && y2 > y1) {
-        	int width = Math.abs(x2 - x1);
-        	int height = Math.abs(y2 - y1);
         	g.setColor(Color.BLACK);
         	g.drawRect(x2, y1, width, height);
         }
         // drag northwest
         if (x2 < x1 && y2 < y1) {
-        	int width = Math.abs(x2 - x1);
-        	int height = Math.abs(y2 - y1);
         	g.setColor(Color.BLACK);
         	g.drawRect(x2, y2, width, height);
         }
