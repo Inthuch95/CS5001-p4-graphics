@@ -89,7 +89,6 @@ public class GuiDelegate implements Observer {
 		undo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				model.saveRedoSetting();
-				redo.setEnabled(true);
 				model.restoreUndoSetting();
 				model.updateModel();
 			}
