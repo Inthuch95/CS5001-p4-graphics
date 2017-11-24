@@ -36,6 +36,17 @@ public class MandelbrotModel extends Observable {
 		notifyObservers();
 	}
 	
+	public void recalculate() {
+		this.madelbrotData = mandelCalc.calcMandelbrotSet(setting.getXResolution(), 
+				setting.getYResolution(),
+				setting.getMinReal(),
+				setting.getMaxReal(),
+				setting.getMinImaginary(),
+				setting.getMaxImaginary(),
+				setting.getMaxIterations(),
+				setting.getRadiusSquared());
+	}
+	
 	public void resetModel() {
 		undoSt.clear();
 		redoSt.clear();

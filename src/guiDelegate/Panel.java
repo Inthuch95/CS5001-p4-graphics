@@ -15,6 +15,7 @@ import model.Setting;
 
 public class Panel extends JPanel implements MouseListener, MouseMotionListener {
 	MandelbrotModel model;
+	Deque<Setting> frames = new ArrayDeque<Setting>();
 	int x1, y1, x2, y2;
 	
 	public Panel(MandelbrotModel model) {
@@ -30,8 +31,13 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 	
 	@Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        int[][] madelbrotData = model.getMadelbrotData();
+		super.paintComponent(g);
+		this.paintImage(g);
+		this.drawZoomBox(g);
+    }
+	
+	private void paintImage(Graphics g) {
+		int[][] madelbrotData = model.getMadelbrotData();
         int maxIterations = model.getSetting().getMaxIterations();
         for (int i = 0; i < madelbrotData.length; i++) {
         	for (int j = 0; j < madelbrotData[i].length; j++) {
@@ -54,7 +60,10 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
         		g.drawLine(j, i, j, i);
             }
         }
-        Deque<String> colors = model.getSetting().getColors();
+	}
+	
+	private void drawZoomBox(Graphics g) {
+		Deque<String> colors = model.getSetting().getColors();
         String currentColor = colors.peek();
         if (currentColor.equals("red")) {
     		g.setColor(Color.RED);
@@ -83,7 +92,7 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
         if (x2 < x1 && y2 < y1) {
         	g.drawRect(x2, y2, width, height);
         }
-    }
+	}
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
@@ -98,15 +107,17 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		double minReal = model.getSetting().getMinReal();
-		double maxReal = model.getSetting().getMaxReal();
-		double minImaginary = model.getSetting().getMinImaginary();
-		double maxImaginary = model.getSetting().getMaxImaginary();
-		int xResolution = model.getSetting().getXResolution();
-		int yResolution = model.getSetting().getYResolution();
+		Setting currentSetting = new Setting();
+		currentSetting.updateSetting(model.getSetting());
+		double minReal = currentSetting.getMinReal();
+		double maxReal = currentSetting.getMaxReal();
+		double minImaginary = currentSetting.getMinImaginary();
+		double maxImaginary = currentSetting.getMaxImaginary();
+		int xResolution = currentSetting.getXResolution();
+		int yResolution = currentSetting.getYResolution();
 		double rangeReal = maxReal - minReal;
 		double rangeImaginary = maxImaginary - minImaginary;
-		int newX1, newX2;
+		int newX1, newX2, newY1, newY2;
 		if (x2 > x1) {
 			newX1 = x1;
 			newX2 = x2;
@@ -114,28 +125,46 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 			newX1 = x2;
 			newX2 = x1;
 		}
-		int newY1, newY2;
 		if (y2 > y1) {
 			newY1 = y1;
 			newY2 = y2;
 		} else {
 			newY1 = y2;
 			newY2 = y1;
-		} 
-		double ratioMinReal = newX1 * 1.0 / xResolution;
-		double ratioMaxReal = newX2 * 1.0 / xResolution;
-		double ratioMinImaginary = newY1 * 1.0 / yResolution;
-		double ratioMaxImaginary = newY2 * 1.0 / yResolution;
-		model.saveUndoSetting();
-		model.clearRedoStack();
-		model.getSetting().setMinReal(minReal + ratioMinReal * rangeReal);
-		model.getSetting().setMaxReal(minReal + ratioMaxReal * rangeReal);
-		model.getSetting().setMinImaginary(minImaginary + ratioMinImaginary * rangeImaginary);
-		model.getSetting().setMaxImaginary(minImaginary + ratioMaxImaginary * rangeReal);
+		}
+		double scale;
+		double ratioMinReal = newX1 / (double) xResolution;
+		double ratioMaxReal = newX2 / (double) xResolution;
+		double ratioMinImaginary = newY1 / (double) yResolution;
+		double ratioMaxImaginary = newY2 / (double) yResolution;
+		double newMinReal = minReal + (ratioMinReal * rangeReal);
+		double newMaxReal = minReal + (ratioMaxReal * rangeReal);
+		double newMinImaginary =  minImaginary + (ratioMinImaginary * rangeImaginary);
+		double newMaxImaginary = minImaginary + (ratioMaxImaginary * rangeReal);
+		double rangeMinReal = newMinReal - minReal;
+		double rangeMaxReal = maxReal - newMaxReal;
+		double rangeMinImaginary = newMinImaginary - minImaginary;
+		double rangeMaxImaginary = maxImaginary - newMaxImaginary;
 		x1 = -1;
 		x2 = -1;
 		y1 = -1;
 		y2 = -1;
+		model.saveUndoSetting();
+		model.clearRedoStack();
+		model.getSetting().setMinReal(newMinReal);
+		model.getSetting().setMaxReal(newMaxReal);
+		model.getSetting().setMinImaginary(newMinImaginary);
+		model.getSetting().setMaxImaginary(newMaxImaginary);
+//		for (int i = 1; i <= 12; i++) {
+//			scale = (double) i / 12.0;
+//			Setting animationSetting = new Setting();
+//			animationSetting.setMinReal(minReal + (scale * rangeMinReal));
+//			animationSetting.setMaxReal(maxReal - (scale * rangeMaxReal));
+//			animationSetting.setMinImaginary(minImaginary + (scale * rangeMinImaginary));
+//			animationSetting.setMaxImaginary(maxImaginary - (scale * rangeMaxImaginary));
+//			animationSetting.setMaxIterations(currentSetting.getMaxIterations());
+//			frames.add(animationSetting);
+//		}
 		model.updateModel();
 	}
 
@@ -162,5 +191,9 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 	public void mouseMoved(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public Deque<Setting> getFrames() {
+		return frames;
 	}
 }
