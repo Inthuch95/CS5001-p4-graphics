@@ -150,8 +150,6 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 		x2 = -1;
 		y1 = -1;
 		y2 = -1;
-		model.saveUndoSetting();
-		model.clearRedoStack();
 		for (int i = 1; i <= ZOOM_FRAMES; i++) {
 			scale = (double) i / (double) ZOOM_FRAMES;
 			Setting animationSetting = new Setting();
@@ -163,6 +161,9 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 			animationSetting.setColors(currentSetting.getColors());
 			frames.add(animationSetting);
 		}
+		model.saveUndoSetting();
+		model.clearRedoStack();
+		model.getSetting().updateSetting(frames.remove());
 		model.updateModel();
 	}
 
