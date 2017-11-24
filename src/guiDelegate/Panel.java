@@ -13,12 +13,20 @@ import javax.swing.JPanel;
 import model.MandelbrotModel;
 import model.Setting;
 
+/**
+ * JPanel used to display the image computed from the Mandelbrot set.
+ *
+ */
 public class Panel extends JPanel implements MouseListener, MouseMotionListener {
 	private MandelbrotModel model;
 	private Deque<Setting> frames = new ArrayDeque<Setting>();
 	private final int ZOOM_FRAMES = 10;
-	int x1, y1, x2, y2;
+	private int x1, y1, x2, y2;
 	
+	/**
+	 * Create Panel instance
+	 * @param model - current model
+	 */
 	public Panel(MandelbrotModel model) {
 		this.model = model;
 		x1 = -1;
@@ -45,6 +53,7 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
         		if (madelbrotData[i][j] >= maxIterations) {
         			g.setColor(Color.BLACK);
                 } else {
+                	// draw with different color mapping
                 	Deque<String> colors = model.getSetting().getColors();
                 	String currentColor = colors.peek();
                 	float colorValue = (float) (madelbrotData[i][j] * 1.0/maxIterations);
@@ -138,6 +147,7 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 		double ratioMaxReal = newX2 / (double) xResolution;
 		double ratioMinImaginary = newY1 / (double) yResolution;
 		double ratioMaxImaginary = newY2 / (double) yResolution;
+		// calculate new setting
 		double newMinReal = minReal + (ratioMinReal * rangeReal);
 		double newMaxReal = minReal + (ratioMaxReal * rangeReal);
 		double newMinImaginary =  minImaginary + (ratioMinImaginary * rangeImaginary);
@@ -150,6 +160,7 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 		x2 = -1;
 		y1 = -1;
 		y2 = -1;
+		// generate animation frames
 		for (int i = 1; i <= ZOOM_FRAMES; i++) {
 			scale = (double) i / (double) ZOOM_FRAMES;
 			Setting animationSetting = new Setting();
@@ -161,8 +172,10 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 			animationSetting.setColors(currentSetting.getColors());
 			frames.add(animationSetting);
 		}
+		// save current setting
 		model.saveUndoSetting();
 		model.clearRedoStack();
+		// update setting and GUI
 		model.getSetting().updateSetting(frames.remove());
 		model.updateModel();
 	}
@@ -192,6 +205,10 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 		
 	}
 
+	/**
+	 * Allow GuiDelegate to access animation frames
+	 * @return animation frames
+	 */
 	public Deque<Setting> getFrames() {
 		return frames;
 	}

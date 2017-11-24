@@ -28,6 +28,11 @@ import javax.swing.SwingUtilities;
 import model.MandelbrotModel;
 import model.Setting;
 
+/**
+ * Render relevant state information stored in the model and 
+ * make changes to the model state based on user events
+ *
+ */
 public class GuiDelegate implements Observer {
 	private final int TEXT_WIDTH = 10;
 	private JFrame mainFrame;
@@ -46,7 +51,7 @@ public class GuiDelegate implements Observer {
 	private Setting setting;
 
 	/**
-	 * Instantiate a new SimpleGuiDelegate object
+	 * Instantiate a new GuiDelegate object
 	 * @param model the Model to observe, render, and update according to user events
 	 */
 	public GuiDelegate(MandelbrotModel model){
@@ -73,8 +78,10 @@ public class GuiDelegate implements Observer {
 	 */
 	private void setupToolbar(){
 		changeColor = new JButton("Change color");
-		changeColor.addActionListener(new ActionListener(){     // to translate event for this button into appropriate model method call
+		// to translate event for this button into appropriate model method call
+		changeColor.addActionListener(new ActionListener(){     
 			public void actionPerformed(ActionEvent e){
+				// save setting and change color
 				model.saveUndoSetting();
 				model.clearRedoStack();
 				model.changeColor();
@@ -83,12 +90,14 @@ public class GuiDelegate implements Observer {
 		reset = new JButton("Reset");
 		reset.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
+				// restore default setting
 				model.resetModel();
 			}
 		});
 		undo = new JButton("Undo");
 		undo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
+				// undo previous operation
 				model.saveRedoSetting();
 				model.restoreUndoSetting();
 				model.updateModel();
@@ -98,6 +107,7 @@ public class GuiDelegate implements Observer {
 		redo = new JButton("Redo");
 		redo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
+				// redo previous operation
 				model.saveUndoSetting();
 				model.restoreRedoSetting();
 				model.updateModel();
@@ -107,6 +117,7 @@ public class GuiDelegate implements Observer {
 		changeIter = new JButton("Change");
 		changeIter.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
+				// save setting and change max iterations
 				model.saveUndoSetting();
 				setting.setMaxIterations(Integer.parseInt(inputField.getText()));
 				model.clearRedoStack();
@@ -120,6 +131,7 @@ public class GuiDelegate implements Observer {
 		inputField.addKeyListener(new KeyListener(){        
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER){
+					// change max iterations when Enter is pressed
 					model.saveUndoSetting();
 					setting.setMaxIterations(Integer.parseInt(inputField.getText()));
 					model.clearRedoStack();
@@ -156,9 +168,6 @@ public class GuiDelegate implements Observer {
 	
 	/**
 	 * Sets up File menu with Load and Save entries
-	 * The Load and Save actions would normally be translated to appropriate model method calls similar to the way the code does this 
-	 * above in @see #setupToolbar(). However, load and save functionality is not implemented here, instead the code below merely displays 
-	 * an error message. 
 	 */ 
 	private void setupMenu(){
 		JMenu file = new JMenu ("File");
@@ -170,6 +179,7 @@ public class GuiDelegate implements Observer {
 		load.addActionListener(new ActionListener(){ 
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
+				// open dialog in current directory
 				File workingDirectory = new File(System.getProperty("user.dir"));
 				fc.setCurrentDirectory(workingDirectory);
 				int returnVal = fc.showOpenDialog(fc);
@@ -178,6 +188,7 @@ public class GuiDelegate implements Observer {
 					try {
 						model.saveUndoSetting();
 						model.clearRedoStack();
+						// load setting from a file
 						FileInputStream fi = new FileInputStream(file);
 						ObjectInputStream oi = new ObjectInputStream(fi);
 						Setting loadedSetting = (Setting) oi.readObject();
@@ -194,13 +205,14 @@ public class GuiDelegate implements Observer {
 		save.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser();
+				// open dialog in current directory
 				File workingDirectory = new File(System.getProperty("user.dir"));
 				fc.setCurrentDirectory(workingDirectory);
 				int returnVal = fc.showSaveDialog(fc);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
 					try {
-						System.out.println ("File is " + file.toString());
+						// load setting from a file
 						FileOutputStream f = new FileOutputStream(file);
 						ObjectOutputStream o = new ObjectOutputStream(f);
 						o.writeObject(setting);
@@ -232,6 +244,7 @@ public class GuiDelegate implements Observer {
 		// Tell the SwingUtilities thread to update the GUI components.
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
+				// update undo/redo buttons
 				if (!model.getUndoSt().isEmpty()) {
 					undo.setEnabled(true);
 				} else {
@@ -242,10 +255,13 @@ public class GuiDelegate implements Observer {
 				} else {
 					redo.setEnabled(false);
 				}
+				// update text field
 				currentIter.setText("Current iteration: " + setting.getMaxIterations());
 				inputField.setText("");
+				// recompute image
 				panel.repaint();
 				Deque<Setting> frames = panel.getFrames();
+				// play animation if queue is not empty
 				if (!frames.isEmpty()) {
 					model.getSetting().updateSetting(frames.remove());
 					model.updateModel();
