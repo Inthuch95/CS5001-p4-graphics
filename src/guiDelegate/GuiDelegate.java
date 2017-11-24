@@ -43,7 +43,7 @@ public class GuiDelegate implements Observer {
 	private JLabel currentIter;
 	private JMenuBar menu;
 	private MandelbrotModel model = new MandelbrotModel();
-	Setting setting;
+	private Setting setting;
 
 	/**
 	 * Instantiate a new SimpleGuiDelegate object
@@ -245,6 +245,11 @@ public class GuiDelegate implements Observer {
 				currentIter.setText("Current iteration: " + setting.getMaxIterations());
 				inputField.setText("");
 				panel.repaint();
+				Deque<Setting> frames = panel.getFrames();
+				if (!frames.isEmpty()) {
+					model.getSetting().updateSetting(frames.remove());
+					model.updateModel();
+				}
 			}
 		});
 	}

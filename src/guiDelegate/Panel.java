@@ -14,8 +14,9 @@ import model.MandelbrotModel;
 import model.Setting;
 
 public class Panel extends JPanel implements MouseListener, MouseMotionListener {
-	MandelbrotModel model;
-	Deque<Setting> frames = new ArrayDeque<Setting>();
+	private MandelbrotModel model;
+	private Deque<Setting> frames = new ArrayDeque<Setting>();
+	private final int ZOOM_FRAMES = 10;
 	int x1, y1, x2, y2;
 	
 	public Panel(MandelbrotModel model) {
@@ -151,20 +152,17 @@ public class Panel extends JPanel implements MouseListener, MouseMotionListener 
 		y2 = -1;
 		model.saveUndoSetting();
 		model.clearRedoStack();
-		model.getSetting().setMinReal(newMinReal);
-		model.getSetting().setMaxReal(newMaxReal);
-		model.getSetting().setMinImaginary(newMinImaginary);
-		model.getSetting().setMaxImaginary(newMaxImaginary);
-//		for (int i = 1; i <= 12; i++) {
-//			scale = (double) i / 12.0;
-//			Setting animationSetting = new Setting();
-//			animationSetting.setMinReal(minReal + (scale * rangeMinReal));
-//			animationSetting.setMaxReal(maxReal - (scale * rangeMaxReal));
-//			animationSetting.setMinImaginary(minImaginary + (scale * rangeMinImaginary));
-//			animationSetting.setMaxImaginary(maxImaginary - (scale * rangeMaxImaginary));
-//			animationSetting.setMaxIterations(currentSetting.getMaxIterations());
-//			frames.add(animationSetting);
-//		}
+		for (int i = 1; i <= ZOOM_FRAMES; i++) {
+			scale = (double) i / (double) ZOOM_FRAMES;
+			Setting animationSetting = new Setting();
+			animationSetting.setMinReal(minReal + (scale * rangeMinReal));
+			animationSetting.setMaxReal(maxReal - (scale * rangeMaxReal));
+			animationSetting.setMinImaginary(minImaginary + (scale * rangeMinImaginary));
+			animationSetting.setMaxImaginary(maxImaginary - (scale * rangeMaxImaginary));
+			animationSetting.setMaxIterations(currentSetting.getMaxIterations());
+			animationSetting.setColors(currentSetting.getColors());
+			frames.add(animationSetting);
+		}
 		model.updateModel();
 	}
 
